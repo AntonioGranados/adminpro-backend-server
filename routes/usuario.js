@@ -14,20 +14,39 @@ var Usuario = require('../models/usuario');
 // Obtener todos los usuarios
 // =============================
 app.get('/', (req, res, next) => {
-    Usuario.find({}, 'nombre email img role').exec((err, usuarios) => { // listado de usuarios obteniendo solo el nombre email role e img
-        if (err) { // Si encuentra algún error
-            return res.status(500).json({
-                ok: false,
-                mensaje: 'Error al cargar los usuarios',
-                errors: err
+
+    var desde = req.query.desde || 0; // parametro opcional si no viene nada se pondra 0
+    desde = Number(desde); // Nos aseguramos que la variable sea un numero
+
+    Usuario.find({}, 'nombre email img role')
+        .skip(desde) // funcion de mongoose para decirle que salte lo que venga en la variable desde
+        .limit(5) // muestra solo 5 registros
+        .exec((err, usuarios) => { // listado de usuarios obteniendo solo el nombre email role e img
+            if (err) { // Si encuentra algún error
+                return res.status(500).json({
+                    ok: false,
+                    mensaje: 'Error al cargar los usuarios',
+                    errors: err
+                });
+            }
+
+            Usuario.count({}, (err, conteo) => { // Hacemos el conteo de registros
+                if (err) { // Si encuentra algún error
+                    return res.status(500).json({
+                        ok: false,
+                        mensaje: 'Error al cargar los usuarios',
+                        errors: err
+                    });
+                }
+
+                // Si no sucede ningún error
+                res.status(200).json({
+                    ok: true,
+                    usuarios,
+                    total: conteo // muestra el numero total de registros
+                });
             });
-        }
-        // Si no sucede ningún error
-        res.status(200).json({
-            ok: true,
-            usuarios
         });
-    });
 });
 
 
